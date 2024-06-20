@@ -1,0 +1,38 @@
+<!-- quiz_app/templates/quiz_app/quiz.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz</title>
+    <script>
+        const quizId = "{{ quiz_id }}";
+        const username = "{{ user.username }}";
+        const ws = new WebSocket(`ws://${window.location.host}/ws/quiz/${quizId}/`);
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'score_update') {
+                const scoreUpdate = document.getElementById('score_update');
+                scoreUpdate.innerHTML += `<p>${data.username}: ${data.score}</p>`;
+            } else if (data.type === 'leaderboard_update') {
+                const leaderboard = document.getElementById('leaderboard');
+                leaderboard.innerHTML = '<h2>Leaderboard</h2>';
+                data.leaderboard.forEach(entry => {
+                    leaderboard.innerHTML += `<p>${entry.username}: ${entry.score}</p>`;
+                });
+            }
+        };
+
+        function sendAnswer(answer) {
+            ws.send(JSON.stringify({ 'answer': answer }));
+        }
+    </script>
+</head>
+<body>
+    <h1>Quiz {{ quiz_id }}</h1>
+    <div id="score_update"></div>
+    <div id="leaderboard"></div>
+    <button onclick="sendAnswer('answer1')">Submit Answer 1</button>
+    <button onclick="sendAnswer('answer2')">Submit Answer 2</button>
+</body>
+</html>
